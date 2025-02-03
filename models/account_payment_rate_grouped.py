@@ -173,10 +173,13 @@ class Account_payment_methods(models.Model):
         if not self.is_advanced_payment:
             self.ensure_one()
         # Crear el asistente y llenar line_ids con to_pay_move_line_ids
+        amount_to_send = self.payment_difference
+        if self.currency_id != self.company_currency_id:
+            amount_to_send = self.payment_difference_usd
         payment_register = self.env['custom.account.payment.register'].create({
             'line_ids': [(6, 0, self.to_pay_move_line_ids.ids)],
             'multiple_payment_id': self.id,# Aquí asignamos el ID del primer modelo
-            'amount_received' : self.payment_difference,
+            'amount_received' : amount_to_send,
             'journal_id':self.last_journal_used.id,
             'payment_method_line_id':self.last_payment_method_line_id.id,
             'is_advanced_payment':self.is_advanced_payment,

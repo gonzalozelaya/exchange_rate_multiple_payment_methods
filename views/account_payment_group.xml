@@ -8,10 +8,10 @@
             <!-- Agregar campos antes o después de un elemento existente -->
             <xpath expr="//field[@name='company_id']" position="after">
                 <field name="currency_id" />
-                <field name ="exchange_rate" invisible="currency_id.id != 1"/>
+                <field name ="exchange_rate" invisible="currency_id != 1"/>
             </xpath>
             <xpath expr="//field[@name='payment_total']" position="after">
-                <field name="payment_difference_usd" invisible="currency_id != 1"/>
+                <field name="payment_difference_usd" invisible="currency_id != 1 or state != 'draft'"/>
                 <field name="payment_total_usd" invisible="currency_id != 1"/>
             </xpath>
             <xpath expr="//field[@name='selected_debt']" position="after">
