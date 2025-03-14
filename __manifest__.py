@@ -23,6 +23,7 @@
     'depends': ['account_payment_pro','account-payment-group'],
     'data':['views/account_payment_views.xml',
             'views/account_payment_group.xml',
+            'views/account_move_views.xml',
            ]
     # only loaded in demonstration mode
 }
