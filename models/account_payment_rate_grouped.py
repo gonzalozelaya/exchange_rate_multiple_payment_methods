@@ -13,11 +13,9 @@ class Account_payment_methods(models.Model):
         'res.currency',
         string='Divisa',
         compute ='_compute_currency_id',
-        required = True,
         store=True,
     )
-    
-    exchange_rate = fields.Float('Exchange rate',compute = '_compute_exchange_rate')
+    exchange_rate = fields.Float('Tasa de cambio',compute = '_compute_exchange_rate')
     
     other_currency = fields.Boolean('Other currency',compute ='_compute_other_currency',default = False, readonly = True)
     manual_company_currency = fields.Boolean(
@@ -74,6 +72,7 @@ class Account_payment_methods(models.Model):
     @api.depends('to_pay_move_line_ids')
     def _compute_currency_id(self):
         for rec in self:
+            rec.currency_id = self.env.company.currency_id
             for line in rec.to_pay_move_line_ids:
                 rec.currency_id = line.currency_id
         return
