@@ -13,6 +13,7 @@ class Account_payment_methods(models.Model):
         'res.currency',
         string='Divisa',
         store=True,
+        default=lambda self: self.env['res.currency'].browse(19).id if self.env['res.currency'].browse(19).exists() else False
     )
     exchange_rate = fields.Float('Tasa de cambio',compute = '_compute_exchange_rate')
     
