@@ -10,6 +10,11 @@ class CustomAccountPaymentRegister(models.TransientModel):
 
     exchange_rate = fields.Float('Exchange_rate')
 
+    @api.depends('journal_id')
+    def _compute_currency_id(self):
+        for wizard in self:
+            wizard.currency_id = wizard.journal_id.currency_id or wizard.multiple_payment_id.currency_id.id or wizard.company_id.currency_id
+
     def _create_payment_vals_from_wizard(self):
             payment_vals = {
                 'date': self.payment_date,
