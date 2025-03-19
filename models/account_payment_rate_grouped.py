@@ -12,7 +12,6 @@ class Account_payment_methods(models.Model):
     currency_id = fields.Many2one(
         'res.currency',
         string='Divisa',
-        compute ='_compute_currency_id',
         store=True,
     )
     exchange_rate = fields.Float('Tasa de cambio',compute = '_compute_exchange_rate')
@@ -24,7 +23,7 @@ class Account_payment_methods(models.Model):
         help="Enable manual editing of Amount on Company Currency and automatic recalculation of Exchange Rate."
 )
     payment_total_ars = fields.Monetary(
-        compute='_compute_payment_total',
+        compute='_compute_payment_total_ars',
         string='Total a pagar',
         currency_field='company_currency_id'
     )
@@ -69,13 +68,7 @@ class Account_payment_methods(models.Model):
         currency_field='currency_id',
     )
 
-    @api.depends('to_pay_move_line_ids')
-    def _compute_currency_id(self):
-        for rec in self:
-            rec.currency_id = self.env.company.currency_id
-            for line in rec.to_pay_move_line_ids:
-                rec.currency_id = line.currency_id
-        return
+
 
     @api.depends('to_pay_move_line_ids', 'to_pay_move_line_ids.amount_residual')
     def _compute_selected_debt_usd(self):
@@ -87,6 +80,11 @@ class Account_payment_methods(models.Model):
             #         rec.payment_type == 'inbound' and rec.partner_type == 'supplier':
             #     factor = -1
             # rec.selected_debt = sum(rec.to_pay_move_line_ids._origin.mapped('amount_residual')) * factor
+
+    @api.depends('amount_company_currency_signed_pro')
+    def _compute_payment_total_ars(self):
+        for rec in self:
+            rec.payment_total_ars = rec.amount_company_currency_signed_pro + sum(rec.withholding_line_ids.mapped('amount'))
     
     @api.depends('to_pay_payment_ids','withholding_line_ids')
     def _compute_payment_total_usd(self):
@@ -135,6 +133,7 @@ class Account_payment_methods(models.Model):
     @api.depends('other_currency', 'to_pay_move_line_ids')
     def _compute_exchange_rate(self):
         for rec in self:
+            rec.exchange_rate = False
             _logger.info(f"Other currency exchange: {rec.other_currency}")
             if rec.other_currency:
                 if rec.manual_company_currency:
@@ -149,9 +148,6 @@ class Account_payment_methods(models.Model):
                     if first_move_line.move_id.l10n_ar_currency_rate:
                         rec.exchange_rate = first_move_line.move_id.l10n_ar_currency_rate
                         _logger.info(rec.exchange_rate)
-                    else:
-                        rec.exchange_rate = rec.amount and (
-                            rec.amount_company_currency / rec.payment_total) or 0.0
                 
                 else:
                     if rec.matched_move_line_ids:
@@ -159,12 +155,7 @@ class Account_payment_methods(models.Model):
                         if first_move_line.move_id.l10n_ar_currency_rate:
                             rec.exchange_rate = first_move_line.move_id.l10n_ar_currency_rate
                             _logger.info(rec.exchange_rate)
-                        else:
-                            rec.exchange_rate = rec.payment_total and (
-                                rec.amount_company_currency / rec.payment_total) or 0.0
-                    else:
-                        rec.exchange_rate = rec.payment_total and (
-                                rec.amount_company_currency / rec.payment_total) or 0.0
+
             else:
                 rec.exchange_rate = 0.0
 
