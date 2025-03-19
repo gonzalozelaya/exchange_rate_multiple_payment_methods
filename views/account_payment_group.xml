@@ -7,7 +7,7 @@
         <field name="arch" type="xml">
             <!-- Agregar campos antes o después de un elemento existente -->
             <xpath expr="//field[@name='company_id']" position="after">
-                <field name="currency_id" />
+                <field name="currency_id" readonly="state in ['posted', 'cancelled']"/>
                 <field name ="exchange_rate" invisible="currency_id != 1"/>
             </xpath>
             <xpath expr="//field[@name='payment_total']" position="after">
